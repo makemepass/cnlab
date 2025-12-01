@@ -1,82 +1,74 @@
 #include <stdio.h>
-#include <limits.h>
-#include <stdbool.h>
-
-#define MAX 100
 #define INF 9999
+#define MAX 10
 
-int minDistance(int dist[], bool visited[], int n) {
-    int min = INF, min_index;
-    for (int v = 0; v < n; v++)
-        if (!visited[v] && dist[v] <= min)
-            min = dist[v], min_index = v;
-    return min_index;
-}
+void dijkstra(int g[MAX][MAX], int n, int start) {
+    int dist[MAX], visited[MAX], pred[MAX];
+    int i, j, next;
 
-void printPath(int parent[], int j) {
-    if (parent[j] == -1)
-        return;
-    printPath(parent, parent[j]);
-    printf(" %c", j + 'a');
-}
+    // Replace 0s with INF (no edge)
+    for (i = 0; i < n; i++)
+        for (j = 0; j < n; j++)
+            if (g[i][j] == 0 && i != j)
+                g[i][j] = INF;
 
-void dijkstra(int graph[MAX][MAX], int n, int src, int dest) {
-    int dist[MAX];
-    bool visited[MAX];
-    int parent[MAX];
-
-    for (int i = 0; i < n; i++) {
-        dist[i] = INF;
-        visited[i] = false;
-        parent[i] = -1;
+    // Initialize
+    for (i = 0; i < n; i++) {
+        dist[i] = g[start][i];
+        pred[i] = start;
+        visited[i] = 0;
     }
 
-    dist[src] = 0;
+    dist[start] = 0;
+    visited[start] = 1;
 
-    for (int count = 0; count < n - 1; count++) {
-        int u = minDistance(dist, visited, n);
-        visited[u] = true;
-
-        for (int v = 0; v < n; v++) {
-            if (!visited[v] && graph[u][v] != INF &&
-                dist[u] + graph[u][v] < dist[v]) {
-                dist[v] = dist[u] + graph[u][v];
-                parent[v] = u;
+    // Main loop
+    for (int count = 1; count < n; count++) {
+        int min = INF;
+        for (i = 0; i < n; i++)
+            if (!visited[i] && dist[i] < min) {
+                min = dist[i];
+                next = i;
             }
+
+        visited[next] = 1;
+
+        // Update neighbors
+        for (i = 0; i < n; i++)
+            if (!visited[i] && min + g[next][i] < dist[i]) {
+                dist[i] = min + g[next][i];
+                pred[i] = next;
+            }
+    }
+
+    // Print all shortest paths
+    for (i = 0; i < n; i++) {
+        if (i != start) {
+            printf("\nDistance to %d = %d\nPath: %d", i, dist[i], i);
+            j = i;
+            while (j != start) {
+                j = pred[j];
+                printf(" <- %d", j);
+            }
+            printf("\n");
         }
     }
-
-    printf("\nshortest path \nfrom %c to %c is : %c", src + 'a', dest + 'a', src + 'a');
-    printPath(parent, dest);
-    printf("\nlength=%d\n", dist[dest]);
 }
 
 int main() {
-    int n, graph[MAX][MAX];
-    char srcChar, destChar;
+    int g[MAX][MAX], n, start;
 
-    printf("shortest path dijkstras algorithm\n");
-    printf("***********************************\n");
-    printf("enter no of nodes: ");
+    printf("Nodes: ");
     scanf("%d", &n);
 
-    printf("enter the adjacency matrix\n");
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            scanf("%d", &graph[i][j]);
-            if (graph[i][j] == -1)
-                graph[i][j] = INF;  // Replace -1 with INF
-        }
-    }
+    printf("Adjacency matrix:\n");
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            scanf("%d", &g[i][j]);
 
-    printf("enter source node: ");
-    scanf(" %c", &srcChar);
-    printf("enter destination node: ");
-    scanf(" %c", &destChar);
+    printf("Start node: ");
+    scanf("%d", &start);
 
-    int src = srcChar - 'a';
-    int dest = destChar - 'a';
-
-    dijkstra(graph, n, src, dest);
+    dijkstra(g, n, start);
     return 0;
 }
