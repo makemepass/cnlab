@@ -1,78 +1,71 @@
 #include <stdio.h>
+#include <stdbool.h>
+
+#define MAX 100
 #define INF 9999
-#define MAX 10
 
-void dijkstra(int g[MAX][MAX], int n, int start) {
-    int dist[MAX], visited[MAX], pred[MAX];
-    int i, j, count, next;
+int minNode(int dist[], bool visited[], int n) {
+    int min = INF, index = -1;
+    for (int i = 0; i < n; i++)
+        if (!visited[i] && dist[i] < min)
+            min = dist[i], index = i;
+    return index;
+}
 
-    // Convert adjacency matrix to cost matrix
-    for (i = 0; i < n; i++)
-        for (j = 0; j < n; j++)
-            if (g[i][j] == 0)
-                g[i][j] = INF;
+void printPath(int parent[], int v) {
+    if (parent[v] == -1) return;
+    printPath(parent, parent[v]);
+    printf(" %c", v + 'a');
+}
 
-    // Initialize
-    for (i = 0; i < n; i++) {
-        dist[i] = g[start][i];
-        pred[i] = start;
-        visited[i] = 0;
-    }
+void dijkstraLSR(int g[MAX][MAX], int n, int src, int dest) {
+    int dist[MAX], parent[MAX];
+    bool visited[MAX];
 
-    dist[start] = 0;
-    visited[start] = 1;
+    for (int i = 0; i < n; i++)
+        dist[i] = INF, visited[i] = false, parent[i] = -1;
 
-    // Main Dijkstra loop
-    for (count = 1; count < n; count++) {
-        int min = INF;
+    dist[src] = 0;
 
-        // Pick unvisited node with the smallest distance
-        for (i = 0; i < n; i++)
-            if (!visited[i] && dist[i] < min) {
-                min = dist[i];
-                next = i;
+    for (int count = 0; count < n - 1; count++) {
+        int u = minNode(dist, visited, n);
+        visited[u] = true;
+
+        for (int v = 0; v < n; v++) {
+            if (!visited[v] && g[u][v] != INF &&
+                dist[u] + g[u][v] < dist[v]) {
+
+                dist[v] = dist[u] + g[u][v];
+                parent[v] = u;
             }
-
-        visited[next] = 1;
-
-        // Update neighbors
-        for (i = 0; i < n; i++)
-            if (!visited[i] && min + g[next][i] < dist[i]) {
-                dist[i] = min + g[next][i];
-                pred[i] = next;
-            }
-    }
-
-    // Print results
-    for (i = 0; i < n; i++) {
-        if (i != start) {
-            printf("\nDistance to %d = %d", i, dist[i]);
-            printf("\nPath: %d", i);
-
-            j = i;
-            while (j != start) {
-                j = pred[j];
-                printf(" <- %d", j);
-            }
-            printf("\n");
         }
     }
+
+    printf("\nShortest path from %c to %c:\n", src + 'a', dest + 'a');
+    printf("%c", src + 'a');
+    printPath(parent, dest);
+    printf("\nCost = %d\n", dist[dest]);
 }
 
 int main() {
-    int g[MAX][MAX], n, start, i, j;
+    int n, g[MAX][MAX];
+    char s, d;
 
-    printf("Nodes: ");
+    printf("Number of nodes: ");
     scanf("%d", &n);
 
     printf("Adjacency matrix:\n");
-    for (i = 0; i < n; i++)
-        for (j = 0; j < n; j++)
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++) {
             scanf("%d", &g[i][j]);
+            if (g[i][j] == -1) g[i][j] = INF;
+        }
 
-    printf("Start node: ");
-    scanf("%d", &start);
+    printf("Source (a,b,c...): ");
+    scanf(" %c", &s);
+    printf("Destination: ");
+    scanf(" %c", &d);
 
-    dijkstra(g, n, start);
+    dijkstraLSR(g, n, s - 'a', d - 'a');
     return 0;
 }
